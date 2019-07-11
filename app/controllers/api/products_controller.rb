@@ -1,4 +1,6 @@
 class Api::ProductsController < ApplicationController
+  before_action :authenticate_admin, except: [:index, :show]
+
   def index
     @products = Product.all
 
@@ -18,6 +20,9 @@ class Api::ProductsController < ApplicationController
       @products = @products.order(price: :asc)
     end
 
+    if params[:category_name]
+      @products = Category.find_by(name: params[:category_name]).products
+    end
     render "index.json.jb"
   end
 
@@ -25,13 +30,17 @@ class Api::ProductsController < ApplicationController
     @product = Product.new(
       name: params[:name],
       price: params[:price],
-      image_url: params[:image_url],
       description: params[:description],
+      supplier_id: params[:supplier_id],
     )
     if @product.save
+      Image.create(
+        url: params[:image_url],
+        product_id: @product.id,
+      )
       render "show.json.jb"
     else
-      render json: { errors: @product.errors.full_messages }, status: unprocessable_entity
+      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -44,12 +53,11 @@ class Api::ProductsController < ApplicationController
     @product = Product.find_by(id: params[:id])
     @product.name = params[:name] || @product.name
     @product.price = params[:price] || @product.price
-    @product.image_url = params[:image_url] || @product.image_url
     @product.description = params[:description] || @product.description
     if @product.save
       render "show.json.jb"
     else
-      render json: { errors: @product.errors.full_messages }, status: unprocessable_entity
+      render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
