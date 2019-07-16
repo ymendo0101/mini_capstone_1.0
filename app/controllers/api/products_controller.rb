@@ -5,7 +5,7 @@ class Api::ProductsController < ApplicationController
     @products = Product.all
 
     if params[:search]
-      @products = @products.where("name ILIKE ? " "%#{params[:search]}%")
+      @products = @products.where("name ILIKE ?", "%#{params[:search]}%")
     end
 
     if params[:discount]
@@ -17,12 +17,13 @@ class Api::ProductsController < ApplicationController
     elsif params[:sort] == "price" && params[:sort_order] == "desc"
       @products = @products.order(price: :desc)
     else
-      @products = @products.order(price: :asc)
+      @products = @products.order(id: :asc)
     end
 
     if params[:category_name]
       @products = Category.find_by(name: params[:category_name]).products
     end
+
     render "index.json.jb"
   end
 
